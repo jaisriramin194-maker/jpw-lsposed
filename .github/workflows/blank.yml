@@ -10,17 +10,40 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Arrange Android Project Structure
+        run: |
+          mkdir -p app/src/main/java/com/jpwreach/lsposed
+          mkdir -p app/src/main/res/values
+          mkdir -p app/src/main/assets
+          [ -f build.gradle.kts ] && mv build.gradle.kts build.gradle.kts.root
+          [ -f "build.gradle (1).kts" ] && mv "build.gradle (1).kts" app/build.gradle.kts
+          [ -f "build.gradle (3).kts" ] && [ ! -f app/build.gradle.kts ] && mv "build.gradle (3).kts" app/build.gradle.kts
+          [ -f build.gradle.kts.root ] && mv build.gradle.kts.root build.gradle.kts
+          [ -f AndroidManifest.xml ] && mv AndroidManifest.xml app/src/main/
+          [ -f JpwHook.kt ] && mv JpwHook.kt app/src/main/java/com/jpwreach/lsposed/
+          [ -f MainActivity.kt ] && mv MainActivity.kt app/src/main/java/com/jpwreach/lsposed/
+          [ -f strings.xml ] && mv strings.xml app/src/main/res/values/
+          [ -f arrays.xml ] && mv arrays.xml app/src/main/res/values/
+          [ -f xposed_init ] && mv xposed_init app/src/main/assets/
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.4'
+
       - name: Build Debug APK
-        run: gradle assembleDebug
+        run: gradle assembleDebug --stacktrace
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: jpw-lsposed-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/debug
+          /*.apk
